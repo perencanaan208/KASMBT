@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no">
+<title>Kas Wali Murid — SDIT Mamba'ul Thoyyibah</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  *{ box-sizing:border-box; margin:0; padding:0; }
+  html, body{ height:100%; overflow:hidden; font-family:'Plus Jakarta Sans', sans-serif; background:#F6F1E4; }
+
+  #frameWrap{ position:fixed; inset:0; }
+  #gasFrame{ width:100%; height:100%; border:none; display:block; background:#F6F1E4; }
+
+  /* Loading overlay, ditampilkan sampai iframe selesai memuat */
+  #loading{
+    position:fixed; inset:0; z-index:10; display:flex; flex-direction:column;
+    align-items:center; justify-content:center; gap:14px; background:#F6F1E4;
+    transition:opacity .3s ease;
+  }
+  #loading.hide{ opacity:0; pointer-events:none; }
+  .spinner{ width:38px; height:38px; border:3px solid #E3DCC6; border-top-color:#0F5132; border-radius:50%; animation:spin .8s linear infinite; }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  #loading p{ font-size:13.5px; color:#5B6459; font-weight:600; }
+
+  /* Tombol darurat: buka di tab baru — selalu ada untuk jaga-jaga jika iframe gagal / login Google diblokir browser */
+  #openNewTab{
+    position:fixed; top:12px; right:12px; z-index:20;
+    background:#0F5132; color:#F3EFE0; text-decoration:none;
+    font-size:12.5px; font-weight:700; padding:8px 14px; border-radius:100px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.18); display:inline-flex; align-items:center; gap:6px;
+    opacity:0.92;
+  }
+  #openNewTab:hover{ opacity:1; }
+
+  /* Pesan fallback jika iframe tidak kunjung siap (mis. diblokir kebijakan Google) */
+  #fallback{
+    position:fixed; inset:0; z-index:15; display:none; flex-direction:column; align-items:center;
+    justify-content:center; gap:14px; background:#F6F1E4; text-align:center; padding:24px;
+  }
+  #fallback.show{ display:flex; }
+  #fallback h2{ font-size:17px; color:#0A3A24; }
+  #fallback p{ font-size:13.5px; color:#5B6459; max-width:340px; line-height:1.6; }
+  #fallback a{
+    background:#0F5132; color:#F3EFE0; text-decoration:none; font-weight:700;
+    font-size:14px; padding:11px 22px; border-radius:10px;
+  }
+</style>
+</head>
+<body>
+
+  <a id="openNewTab" href="#" target="_blank" rel="noopener">⧉ Buka di tab baru</a>
+
+  <div id="loading">
+    <div class="spinner"></div>
+    <p>Memuat aplikasi kas wali murid...</p>
+  </div>
+
+  <div id="fallback">
+    <h2>Aplikasi belum bisa tampil di sini</h2>
+    <p>Google terkadang memblokir halaman login/otorisasi agar tidak bisa ditampilkan di dalam iframe. Silakan buka aplikasi langsung lewat tombol di bawah ini.</p>
+    <a id="fallbackLink" href="#" target="_blank" rel="noopener">Buka Aplikasi Kas Wali Murid</a>
+  </div>
+
+  <div id="frameWrap">
+    <iframe id="gasFrame" title="Kas Wali Murid" referrerpolicy="no-referrer-when-downgrade" allow="clipboard-write"></iframe>
+  </div>
+
+<script src="config.js"></script>
+<script>
+(function(){
+  var frame = document.getElementById('gasFrame');
+  var loading = document.getElementById('loading');
+  var fallback = document.getElementById('fallback');
+  var openNewTab = document.getElementById('openNewTab');
+  var fallbackLink = document.getElementById('fallbackLink');
+
+  if (typeof GAS_URL !== 'string' || GAS_URL.indexOf('script.google.com') === -1) {
+    loading.classList.add('hide');
+    fallback.classList.add('show');
+    fallback.querySelector('p').textContent = 'URL Web App belum diatur. Buka file config.js dan tempel URL /exec dari Apps Script Anda.';
+    return;
+  }
+
+  openNewTab.href = GAS_URL;
+  fallbackLink.href = GAS_URL;
+
+  var loaded = false;
+  frame.addEventListener('load', function(){
+    loaded = true;
+    loading.classList.add('hide');
+  });
+
+  frame.src = GAS_URL;
+
+  // Jika dalam 6 detik iframe belum juga memuat (biasanya karena diblokir
+  // kebijakan frame Google saat proses login/otorisasi), tampilkan fallback.
+  setTimeout(function(){
+    if (!loaded) {
+      loading.classList.add('hide');
+      fallback.classList.add('show');
+    }
+  }, 6000);
+})();
+</script>
+</body>
+</html>
